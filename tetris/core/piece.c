@@ -1,6 +1,5 @@
 //implementación concreta de la plantilla de mis piezas
 #include "piece.h"
-#include <stdio.h>
 #include <stdint.h>
 
 //Catálogo de piezas concreto con [tipos de pieza][rotación][filas][columnas]

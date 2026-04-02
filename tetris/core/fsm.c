@@ -1,116 +1,128 @@
 #include "fsm.h"
 
-#include <stdio.h>
+#include <stddef.h>
 
+//mi máquina de estados finitos que ahora será privada
+typedef struct {
+    fsm_state_t next_state;
+    //puntero a la función condición que me lleva al estado, o sea los punteros al guard
+    uint8_t (*guard)(const game_t *game);
+    //puntero a la función que determina qué acción ejecuto si se cumple?, o sea mi puntero al action
+    void (*action)(game_t *game);
+} fsm_transition_t;
+
+//Como puedo tener varias transiciones dependiendo el resultado de mi guard. Tengo una celda de transiciones
+typedef struct {
+    const fsm_transition_t *transitions;
+    uint8_t count;
+} fsm_cell_t;
+
+//inicialización de mi maquina de estados
+void fsm_init(fsm_t *fsm) {
+    fsm ->state = FSM_STATE_SPAWN;
+}
 //-------------------GUARDS-----------------
 
 //spawn
 static uint8_t guard_can_spawn(const game_t *game);
-static uint8_t guard_out_of_range(const game_t *game);
+static uint8_t guard_cannot_spawn(const game_t *game);
 
 //movimiento
-static uint8_t guard_cannot_fall(const game_t *game);
-static uint8_t guard_can_rotate(const game_t *game);
-static uint8_t guard_cannot_move(const game_t *game);
-static uint8_t guard_can_move_left(const game_t *game);
-static uint8_t guard_can_move_right(const game_t *game);
-static uint8_t guard_can_move_down(const game_t *game);
 
-//limpiar
-static uint8_t guard_fill_lines(const game_t *game) ;
+//para abajo o sea también caer
+static uint8_t guard_cannot_fall(const game_t *game);
+static uint8_t guard_can_fall(const game_t *game);
+//rotar
+static uint8_t guard_can_rotate(const game_t *game);
+//left
+static uint8_t guard_can_move_left(const game_t *game);
+//right
+static uint8_t guard_can_move_right(const game_t *game);
 
 //--------------------------ACCIONES--------------------
 //spawn
 static void act_spawn_piece(game_t *game);
 
 //movimiento
+// rota la pieza
 static void act_rotate_piece(game_t *game);
+//a la izquierda
 static void act_move_piece_left(game_t *game);
+//a la derecha
 static void act_move_piece_right(game_t *game);
+//para abajo
 static void act_move_piece_down(game_t *game);
+//fija la pieza
 static void act_lock_piece(game_t *game);
-
-//limpieza
-static void act_clear_line(game_t *game) ;
 
 //ciclo de vida del juego
 static void act_game_over(game_t *game);
 
-//Prototipos extra
-//Revisar si la pieza se puede colocar en el tablero
-static uint8_t check_piece_after_transform (const game_t *game, int8_t dx, int8_t dy, int8_t rotate);
-
 //------------------TABLA DE TRANSICIONES-----------------
-static const fsm_transition_t fsm_spawn_transitions[]={
-    {FSM_STATE_FALLING, guard_can_move_down, act_move_piece_down},
-    {FSM_STATE_GAME_OVER, guard_out_of_range, act_game_over}
+static const fsm_transition_t spawn_tick_transitions[] = {
+    { FSM_STATE_FALLING,  guard_can_spawn,    act_spawn_piece },
+    { FSM_STATE_GAME_OVER, guard_cannot_spawn, act_game_over }
 };
 
-static const fsm_transition_t fsm_fall_transitions[]={
-    {FSM_STATE_FALLING, guard_can_move_down, act_move_piece_down},
-    {FSM_STATE_LOCK, guard_cannot_fall, act_lock_piece}
+static const fsm_transition_t falling_tick_transitions[] = {
+    { FSM_STATE_FALLING, guard_can_fall,    act_move_piece_down },
+    { FSM_STATE_LOCK,    guard_cannot_fall, act_lock_piece}
 };
 
-static const fsm_transition_t fsm_move_left_transitions[]={
-    {FSM_STATE_FALLING, guard_can_move_left, act_move_piece_left},
-    {FSM_STATE_LOCK, guard_cannot_move, act_lock_piece}
+static const fsm_transition_t move_left_transitions[] = {
+    { FSM_STATE_FALLING, guard_can_move_left, act_move_piece_left }
 };
 
-static const fsm_transition_t fsm_move_right_transitions[]={
-    {FSM_STATE_FALLING, guard_can_move_left, act_move_piece_right},
-    {FSM_STATE_LOCK, guard_cannot_move, act_lock_piece},
+static const fsm_transition_t move_right_transitions[] = {
+    { FSM_STATE_FALLING, guard_can_move_right, act_move_piece_right }
 };
 
-static const fsm_transition_t fsm_move_down_transitions[]={
-    {FSM_STATE_FALLING, guard_can_move_down, act_move_piece_down},
-    {FSM_STATE_LOCK, guard_cannot_move, act_lock_piece}
+static const fsm_transition_t rotate_transitions[] = {
+    { FSM_STATE_FALLING, guard_can_rotate, act_rotate_piece }
 };
 
-static const fsm_transition_t fsm_rotate_transitions[]={
-    {FSM_STATE_FALLING, guard_can_rotate, act_rotate_piece}
+static const fsm_transition_t lock_tick_transitions[] = {
+    { FSM_STATE_SPAWN, NULL, NULL}
 };
 
-static const fsm_transition_t fsm_start_transitions[]={
-    {FSM_STATE_SPAWN, guard_can_spawn, act_spawn_piece}
+static const fsm_transition_t move_down_transitions[] = {
+    {FSM_STATE_FALLING, guard_can_fall, act_move_piece_down}
 };
 
-static const fsm_transition_t fsm_clear_transitions[]={
-    {FSM_STATE_CLEAR_LINES, guard_fill_lines, act_clear_line}
-};
-
-//celda de transiciones
-static const fsm_cell_t fsm_spawn[8][8]={
+static const fsm_cell_t fsm_table[FSM_STATE_COUNT][FSM_EVENT_COUNT] = {
     [FSM_STATE_SPAWN] = {
-        [FSM_EVENT_TICK] = {fsm_spawn_transitions, 2}
+        [FSM_EVENT_TICK] = { spawn_tick_transitions, 2 }
     },
     [FSM_STATE_FALLING] = {
-        [FSM_EVENT_TICK] = {fsm_fall_transitions, 2}
-    },
-    [FSM_STATE_FALLING] = {
-        [FSM_EVENT_MOVE_LEFT] = {fsm_move_left_transitions, 2}
-    },
-    [FSM_STATE_FALLING] = {
-        [FSM_EVENT_MOVE_RIGHT] = {fsm_move_right_transitions, 2}
-    },
-    [FSM_STATE_FALLING] = {
-        [FSM_EVENT_DOWN] = {fsm_move_down_transitions, 2}
-    },
-    [FSM_STATE_FALLING] = {
-        [FSM_EVENT_ROTATE] = {fsm_rotate_transitions, 1}
+        [FSM_EVENT_TICK] = { falling_tick_transitions, 2 },
+        [FSM_EVENT_MOVE_LEFT]  = { move_left_transitions, 1 },
+        [FSM_EVENT_MOVE_RIGHT] = { move_right_transitions, 1 },
+        [FSM_EVENT_ROTATE] = { rotate_transitions, 1 },
+        [FSM_EVENT_DOWN] = {move_down_transitions,1}
     },
     [FSM_STATE_LOCK] = {
-        [FSM_EVENT_TICK] = {fsm_clear_transitions, 1}
+        [FSM_EVENT_TICK] = { lock_tick_transitions, 1 }
     },
     [FSM_STATE_GAME_OVER] = {
-        [FSM_EVENT_ROTATE] = {fsm_start_transitions, 1}
+        [FSM_EVENT_INPUT] = {spawn_tick_transitions, 2}
     }
-
 };
 
 
 //Flujo de la maquina de estados
 void fsm_dispatch(fsm_t *fsm, game_t *game, fsm_event_t event) {
-    const fsm_cell_t *cell = &fsm_spawn[fsm->state][event];
+    if (fsm == NULL || game == NULL) {
+        return;
+    }
+    if (fsm->state >= FSM_STATE_COUNT || event >= FSM_EVENT_COUNT) {
+        return;
+    }
+    const fsm_cell_t *cell = &fsm_table[fsm->state][event];
+
+    if (cell->count == 0 || cell->transitions == NULL) {
+        return;
+    }
+
     for (uint8_t i = 0; i < cell->count; i++) {
         const fsm_transition_t *t = &cell->transitions[i];
 
@@ -118,84 +130,65 @@ void fsm_dispatch(fsm_t *fsm, game_t *game, fsm_event_t event) {
             if (t->action != NULL) {
                 t->action(game);
             }
-            // si no se cumple ningún guard, entonces me quedo en el mismo estado
+
             fsm->state = t->next_state;
             return;
         }
     }
 }
 
-//spawn
 static uint8_t guard_can_spawn(const game_t *game) {
-    piece_t temp;
-    piece_type_t type = game->next_type;   /* o bag_peek(), no bag_next() */
-    piece_init(&temp, type, BOARD_WIDTH / 2, 0);
-
-    return board_check_placement(&game->board, &temp) == BOARD_PLACE_OK;
-}
-static void act_spawn_piece(game_t *game) {
-    game_spawn_piece(game);
-    game->next_type = bag_next(&game->bag);
+    return game_can_spawn_piece(game);
 }
 
-//caida
-static uint8_t guard_cannot_fall(const game_t *game) {
-    return !check_piece_after_transform(game, 0, 1, 0);
-}
-static void act_lock_piece(game_t *game) {
-    game_fall(game);
+static uint8_t guard_cannot_spawn(const game_t *game) {
+    return !game_can_spawn_piece(game);
 }
 
-//Movimiento
 static uint8_t guard_can_move_left(const game_t *game) {
-    return check_piece_after_transform(game, -1, 0, 0);
+    return game_can_move(game, -1, 0);
 }
 
 static uint8_t guard_can_move_right(const game_t *game) {
-    return check_piece_after_transform(game, 1, 0, 0);
-}
-
-static uint8_t guard_can_move_down(const game_t *game) {
-    return check_piece_after_transform(game, 0, -1, 0);
+    return game_can_move(game, 1, 0);
 }
 
 static uint8_t guard_can_rotate(const game_t *game) {
-    return check_piece_after_transform(game, 0, 0, 1);
+    return game_can_rotate(game);
 }
-static void act_move_piece_left(game_t* game) {
-    game_move_piece(game, -1,0);
+
+static uint8_t guard_can_fall(const game_t *game) {
+    return game_can_fall(game);
 }
-static void act_move_piece_right(game_t* game) {
-    game_move_piece(game, 1,0);
+
+static uint8_t guard_cannot_fall(const game_t *game) {
+    return !game_can_fall(game);
 }
-static void act_move_piece_down(game_t* game) {
-    game_move_piece(game,0,-1);
+//hace aparecer la pieza
+static void act_spawn_piece(game_t *game) {
+    game_spawn_piece(game);
 }
-static void act_rotate_piece(game_t* game) {
+//mueve izquierda
+static void act_move_piece_left(game_t *game) {
+    game_move_piece(game, -1, 0);
+}
+//mueve derecha
+static void act_move_piece_right(game_t *game) {
+    game_move_piece(game, 1, 0);
+}
+//gira
+static void act_rotate_piece(game_t *game) {
     game_rotate_piece(game);
 }
-
-
-//limpiar
-static uint8_t guard_fill_lines(const game_t *game) {
-    return game_line_filled(game);
+//para abajo
+static void act_move_piece_down(game_t *game) {
+    game_fall_piece(game);
 }
-static void act_clear_line(game_t *game) {
-    game_clear_line(game);
+//fija
+static void act_lock_piece(game_t *game) {
+    game_lock_piece(game);
 }
-
-
-//Ciclo de vida del programa
+//acaba el juego
 static void act_game_over(game_t *game) {
-    game_over(game);
-}
-
-//Auxiliares
-static uint8_t check_piece_after_transform (const game_t *game, int8_t dx, int8_t dy, int8_t rotate) {
-    piece_t temp = game ->current_piece;
-    if (rotate) {
-        piece_rotate(&temp);
-    }
-    piece_move(&temp, dx, dy);
-    return board_check_placement(&game->board, &temp);
+    game_enter_game_over(game);
 }

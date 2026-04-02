@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include "platform/display_port.h"
 #include "core/board.h"
 

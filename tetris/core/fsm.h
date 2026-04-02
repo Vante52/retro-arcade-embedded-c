@@ -7,8 +7,8 @@ typedef enum {
     FSM_STATE_SPAWN=0,
     FSM_STATE_FALLING,
     FSM_STATE_LOCK,
-    FSM_STATE_CLEAR_LINES,
     FSM_STATE_GAME_OVER,
+    FSM_STATE_COUNT
 } fsm_state_t;
 
 //eventos a los que mi juego debe responder
@@ -19,22 +19,9 @@ typedef enum {
     FSM_EVENT_MOVE_RIGHT,
     FSM_EVENT_ROTATE,
     FSM_EVENT_DOWN,
+    FSM_EVENT_INPUT,
+    FSM_EVENT_COUNT,
 } fsm_event_t;
-
-//mi máquina de estados finitos
-typedef struct {
-    fsm_state_t next_state;
-    //puntero a la función condición que me lleva al estado, o sea los punteros al guard
-    uint8_t (*guard)(const game_t *game);
-    //puntero a la función que determina qué acción ejecuto si se cumple?, o sea mi puntero al action
-    void (*action)(game_t *game);
-} fsm_transition_t;
-
-//Como puedo tener varias transiciones dependiendo el resultado de mi guard. Tengo una celda de transiciones
-typedef struct {
-    const fsm_transition_t *transitions;
-    uint8_t count;
-} fsm_cell_t;
 
 typedef struct {
     fsm_state_t state;
@@ -44,6 +31,6 @@ typedef struct {
 void fsm_init(fsm_t *fsm);
 
 //Función que me mueve entre estados
-void fsm_dispach(fsm_t *fsm, game_t *game, fsm_event_t event);
+void fsm_dispatch(fsm_t *fsm, game_t *game, fsm_event_t event);
 
 #endif

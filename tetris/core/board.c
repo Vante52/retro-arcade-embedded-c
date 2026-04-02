@@ -1,6 +1,11 @@
 #include "board.h"
-#include <stdio.h>
 #include <stdint.h>
+
+
+//limpia una linea si es llenada, asume que ya se llamó board can place
+static uint8_t board_clear_lines(board_t *board, const piece_t *piece);
+//verifica si en una fila hay un bloque
+static uint8_t piece_row_has_block(const piece_t *piece, uint8_t row);
 
 //Inicializa el tablero
 void board_init(board_t *board){
@@ -10,17 +15,7 @@ void board_init(board_t *board){
         }
     }
 }
-//Dibuja el tablero usando mi display generico
-void board_render(const board_t *board, display_port_t *display) {
-    display->begin_frame(display->ctx);
-    for (uint8_t y = 0; y < BOARD_HEIGHT; y++) {
-        for (uint8_t x = 0; x < BOARD_WIDTH; x++) {
-            uint8_t value = (board->grid[y][x] == '#') ? 1u : 0u;
-            display->draw_cell(display->ctx, x, y, value);
-        }
-    }
-    display->end_frame(display->ctx);
-}
+
 
 //verifica si la pieza cabe en el tablero
 board_place_result_t board_check_placement(const board_t *board, const piece_t *piece) {
@@ -61,7 +56,7 @@ uint8_t board_lock_piece(board_t *board, const piece_t *piece) {
 }
 
 //limpia una linea si es llenada
-uint8_t board_clear_lines(board_t *board, const piece_t *piece) {
+static uint8_t board_clear_lines(board_t *board, const piece_t *piece) {
     uint8_t cleared = 0;
     int8_t checked_rows[4];
     uint8_t checked_count = 0;
@@ -70,7 +65,7 @@ uint8_t board_clear_lines(board_t *board, const piece_t *piece) {
         if (piece_row_has_block(piece, i)) {
             int8_t row = piece->y + i;
 
-            if (row < 0 || row < BOARD_HEIGHT) {
+            if (row >= 0 && row < BOARD_HEIGHT) {
                 uint8_t already_checked = 0;
                 for (uint8_t r = 0; r < checked_count; r++) {
                     if (checked_rows[r] == row) {

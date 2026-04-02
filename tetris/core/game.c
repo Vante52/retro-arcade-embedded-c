@@ -1,83 +1,132 @@
 #include "game.h"
 #include <stdint.h>
-#include <stdio.h>
+#include "board.h"
+#include "bag.h"
+#include "score.h"
 
-#include "fsm.h"
+struct game {
+    board_t board;
+    piece_t current_piece;
+    piece_bag_t bag;
+    score_t score;
+
+    piece_type_t next_type;
+
+    uint8_t game_over;
+    uint8_t last_cleared_lines;
+};
+
+//instancia del opaque de game
+static game_t game_instance;
+
+//getter de game
+game_t *game_get_instance(void) {
+    return &game_instance;
+}
 
 //Inicializa el juego
 void game_init(game_t *game){
     board_init(&game->board);
     bag_init(&game-> bag);
-    game_spawn_piece(game);
-    game_input(game);
     score_init(&game->score);
+
     game->game_over = 0;
+    game->last_cleared_lines = 0;
+
+    game -> next_type = bag_next(&game->bag);
 }
-//Instancia la pieza
+//Verifica si la pieza cabe
+uint8_t game_can_spawn_piece(const game_t *game) {
+    piece_t temp;
+    piece_init(&temp, game->next_type, BOARD_WIDTH/2, 0);
+    return board_check_placement(&game->board, &temp)== BOARD_PLACE_OK;
+}
+//spawnea la pieza
 void game_spawn_piece(game_t *game) {
-    piece_init(&game->current_piece, bag_next(&game->bag), BOARD_WIDTH / 2, 0);
+    piece_init(&game->current_piece, game->next_type, BOARD_WIDTH/2, 0);
+    game->next_type = bag_next(&game->bag);
 }
 
-//Me trae el tipo de la siguiente pieza
-piece_type_t game_piece_type(game_t *game) {
-    return bag_next(&game ->bag);
-}
-
-//Dibuja el juego usando el display port que se esté usando
-void game_render(const game_t *game, display_port_t *display) {
-    display->begin_frame(display->ctx);
-    for (uint8_t y = 0; y < BOARD_HEIGHT; y++) {
-        for (uint8_t x = 0; x < BOARD_WIDTH; x++) {
-            uint8_t value = (game->board.grid[y][x] == '#') ? 1u : 0u;
-            display->draw_cell(display->ctx, x, y, value);
-        }
-    }
-    for (uint8_t i = 0; i < 4; i++) {
-        for (uint8_t j = 0; j < 4; j++) {
-            if (get_piece(&game->current_piece, i, j)) {
-                int8_t x = game->current_piece.x + j;
-                int8_t y = game->current_piece.y + i;
-                if (x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT) {
-                    display->draw_cell(display->ctx, (uint8_t)x, (uint8_t)y, 1u);
-                }
-            }
-        }
-    }
-    display->end_frame(display->ctx);
-}
-
-void game_clear_line(game_t *game) {
-
-}
-
-//Mueve la pieza una pieza hacia abajo
-void game_fall(game_t *game){
-    game_move_piece(game, 0, -1);
-    board_check_placement(&game -> board, &game -> current_piece);
-}
-
-//Mueve la pieza
-uint8_t game_move_piece(game_t *game, int8_t dx, int8_t dy) {
+//Revisa si la pieza puede moverse hacia abajo
+uint8_t game_can_move(const game_t *game, int8_t dx, int8_t dy) {
     piece_t temp = game->current_piece;
     piece_move(&temp, dx, dy);
-    return board_check_placement(&game -> board, &game -> current_piece);
-
-
+    return board_check_placement(&game->board, &temp) == BOARD_PLACE_OK;
+}
+//si se puede mover hacia abajo, la coloca
+void game_move_piece(game_t *game, int8_t dx, int8_t dy) {
+    piece_t temp = game->current_piece;
+    piece_move(&temp, dx, dy);
+    if (board_check_placement(&game->board, &temp) == BOARD_PLACE_OK) {
+        game->current_piece = temp;
+    }
 }
 
-//rota la pieza
-uint8_t game_rotate_piece(game_t *game) {
+//revisa si la pieza puede caer
+uint8_t game_can_fall(const game_t *game){
+    return game_can_move(game, 0, 1);
+}
+//deja caer la pieza
+void game_fall_piece( game_t *game){
+    game_move_piece(game, 0, 1);
+}
+
+//revisa si la pieza puede rotar
+uint8_t game_can_rotate(const game_t *game) {
     piece_t temp = game->current_piece;
     piece_rotate(&temp);
-    return board_check_placement(&game -> board, &game -> current_piece);
+    return board_check_placement(&game->board, &temp) == BOARD_PLACE_OK;
+}
+//rota la pieza
+void game_rotate_piece(game_t *game) {
+    piece_t temp = game->current_piece;
+    piece_rotate(&temp);
 
+    if (board_check_placement(&game->board, &temp) == BOARD_PLACE_OK) {
+        game->current_piece = temp;
+    }
 }
 
-//Maneja la entrada del usuario
-void game_input(game_t *game){
-    
+//Coloca la pieza
+void game_lock_piece(game_t *game) {
+    game->last_cleared_lines = board_lock_piece(&game->board, &game->current_piece);
+    score_add_lines(&game->score, game->last_cleared_lines);
 }
 
-uint8_t game_line_filled(game_t *game) {
-    return 1;
+//Getters para la maquina de estados y para el render
+//manda el tablero
+uint8_t game_board_cell(const game_t *game, uint8_t x, uint8_t y) {
+    return game->board.grid[y][x];
+}
+//manda la celda de la pieza
+uint8_t game_current_piece_cell(const game_t *game, uint8_t row, uint8_t col) {
+    return get_piece(&game->current_piece, row, col);
+}
+//pos x de la pieza
+int8_t game_current_piece_x(const game_t *game) {
+    return game->current_piece.x;
+}
+//pos y de la pieza
+int8_t game_current_piece_y(const game_t *game) {
+    return game->current_piece.y;
+}
+//tipo de la siguiente pieza
+piece_type_t game_next_type(const game_t *game) {
+    return game->next_type;
+}
+//puntaje
+uint32_t game_score(const game_t *game) {
+    return score_get(&game->score);
+}
+//lineas limpiadas
+uint8_t game_last_cleared_lines(const game_t *game) {
+    return game->last_cleared_lines;
+}
+//game over
+void game_enter_game_over(game_t *game) {
+    game->game_over = 1u;
+}
+// juego terminado?
+uint8_t game_is_game_over(const game_t *game) {
+    return game->game_over;
 }

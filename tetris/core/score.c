@@ -11,6 +11,10 @@ void score_add(score_t *score, uint32_t points){
 }
 
 //Obtiene el puntaje
-uint32_t score_get(score_t *score){
+uint32_t score_get(const score_t *score){
     return score->score;
+}
+
+void score_add_lines(score_t *score, uint8_t cleared_lines) {
+    score->score += cleared_lines*100;
 }
