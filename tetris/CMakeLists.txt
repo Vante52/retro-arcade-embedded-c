@@ -23,4 +23,7 @@ add_executable(tetris
         platform/display_port.h
         host/display_terminal.c
         host/terminal_proxy.h
+        platform/input_port.h
+        host/display_terminal.h
+        host/terminal_proxy.c
 )
