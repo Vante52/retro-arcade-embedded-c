@@ -2,12 +2,11 @@
 #include <stdint.h>
 
 
-//limpia una linea si es llenada, asume que ya se llamó board can place
+//clear a line if its filled assuming that board_check_placement has already been called
 static uint8_t board_clear_lines(board_t *board, const piece_t *piece);
-//verifica si en una fila hay un bloque
+//verify if there is a piece in that row
 static uint8_t piece_row_has_block(const piece_t *piece, uint8_t row);
 
-//Inicializa el tablero
 void board_init(board_t *board){
     for(uint8_t i = 0; i < BOARD_HEIGHT; i++){
         for(uint8_t j = 0; j < BOARD_WIDTH; j++){
@@ -17,7 +16,6 @@ void board_init(board_t *board){
 }
 
 
-//verifica si la pieza cabe en el tablero
 board_place_result_t board_check_placement(const board_t *board, const piece_t *piece) {
     for (uint8_t i = 0; i < 4; i++) {
         for (uint8_t j = 0; j < 4; j++) {
@@ -38,7 +36,6 @@ board_place_result_t board_check_placement(const board_t *board, const piece_t *
     return BOARD_PLACE_OK;
 }
 
-//fija una pieza en el tablero asumiendo que YA FUE VERIFICADA con board_check_placement
 uint8_t board_lock_piece(board_t *board, const piece_t *piece) {
     for (uint8_t i = 0; i < 4; i++) {
         for (uint8_t j = 0; j < 4; j++) {
@@ -55,7 +52,7 @@ uint8_t board_lock_piece(board_t *board, const piece_t *piece) {
     return board_clear_lines(board, piece);
 }
 
-//limpia una linea si es llenada
+//clear a line if the row is filled
 static uint8_t board_clear_lines(board_t *board, const piece_t *piece) {
     uint8_t cleared = 0;
     int8_t checked_rows[4];
@@ -108,7 +105,7 @@ static uint8_t board_clear_lines(board_t *board, const piece_t *piece) {
     return cleared;
 }
 
-//revisa si
+//check if there is a block in this row
 static uint8_t piece_row_has_block(const piece_t *piece, uint8_t row) {
     for (uint8_t col = 0; col < 4; col++) {
         if (get_piece(piece, row, col)) {

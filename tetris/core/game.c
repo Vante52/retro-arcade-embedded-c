@@ -93,8 +93,7 @@ void game_lock_piece(game_t *game) {
     score_add_lines(&game->score, game->last_cleared_lines);
 }
 
-//Getters para la maquina de estados y para el render
-//manda el tablero
+
 uint8_t game_board_cell(const game_t *game, uint8_t x, uint8_t y) {
     return game->board.grid[y][x];
 }

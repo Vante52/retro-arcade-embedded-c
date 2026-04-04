@@ -1,8 +1,18 @@
+/**
+ * @file fsm.h
+ * @author vante52 (valkacr.dev@gmail.com)
+ * @brief Public interface for Tetris finite state machine.
+ * @version 0.1
+ * @date 2026-04-04
+ * 
+ * @copyright Copyright (c) 2026 Valka CR
+ * 
+ */
 #ifndef FSM_H
 #define FSM_H
 #include "game.h"
 
-//estados que puede tomar mi juego
+//states
 typedef enum {
     FSM_STATE_SPAWN=0,
     FSM_STATE_FALLING,
@@ -11,7 +21,7 @@ typedef enum {
     FSM_STATE_COUNT
 } fsm_state_t;
 
-//eventos a los que mi juego debe responder
+//events
 typedef enum {
     FSM_EVENT_NONE=0,
     FSM_EVENT_TICK,
@@ -23,14 +33,25 @@ typedef enum {
     FSM_EVENT_COUNT,
 } fsm_event_t;
 
+// finite state machine current state
 typedef struct {
     fsm_state_t state;
 }fsm_t;
 
-//Inicialización de mi maquina de estados
+/**
+ * @brief Initialization of my finite state machine
+ * 
+ * @param[in, out] fsm current fsm
+ */
 void fsm_init(fsm_t *fsm);
 
-//Función que me mueve entre estados
+/**
+ * @brief take me back and forth through the states
+ * 
+ * @param[in, out] fsm current fsm
+ * @param[in] game current game
+ * @param[in] event event input
+ */
 void fsm_dispatch(fsm_t *fsm, game_t *game, fsm_event_t event);
 
 #endif

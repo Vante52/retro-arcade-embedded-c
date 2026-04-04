@@ -1,9 +1,9 @@
 #include "bag.h"
 
-//semilla de la aleatoriedad
+//Pseudo Random Number Generator
 static uint32_t prng_state = 0xA341316Cu;
 
-//Va haciendo xorshift sobre la semilla para que haya aleatoriedad siempre
+//Advances the internar xorshift PRNG state
 static uint32_t prng_next(void) {
     uint32_t x = prng_state;
 
@@ -15,13 +15,14 @@ static uint32_t prng_next(void) {
     return x;
 }
 
-//Intercambio de dos piezas
+//swap positions of two pieces inside the array
 static void bag_swap(piece_type_t *a, piece_type_t *b) {
     piece_type_t temp = *a;
     *a = *b;
     *b = temp;
 }
-//Revuelvo los indices de la bolsa
+
+//Shuffle the indexes inside the bag
 static void bag_shuffle(piece_bag_t *bag) {
     for (int8_t i = BAG_SIZE - 1; i > 0; i--) {
         uint8_t j = (uint8_t)(prng_next() % (uint32_t)(i + 1));
@@ -29,7 +30,7 @@ static void bag_shuffle(piece_bag_t *bag) {
         bag_swap(&bag->pieces[i], &bag->pieces[j]);
     }
 }
-//Inicializo la bolsa con las figuras que tengo en el catalogo
+//Initialice the bag with the block catalog
 void bag_init(piece_bag_t *bag) {
     bag->pieces[0] = PIECE_I;
     bag->pieces[1] = PIECE_O;
@@ -43,7 +44,7 @@ void bag_init(piece_bag_t *bag) {
     bag->index = 0u;
 }
 
-//saca la siguiente pieza y si se acabo, vuelve a llenar y a mezclar
+// When the bag is exhausted, it is reinitialized and shuffled again.
 piece_type_t bag_next(piece_bag_t *bag) {
     if (bag->index >= BAG_SIZE) {
         bag_init(bag);

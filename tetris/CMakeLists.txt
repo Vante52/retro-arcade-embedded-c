@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.1)
+cmake_minimum_required(VERSION 3.10)
 project(tetris C)
 
 set(CMAKE_C_STANDARD 11)
@@ -7,34 +7,23 @@ include_directories(.)
 include_directories(core)
 
 add_executable(tetris
-        core/bag.c
-        core/bag.h
-        core/board.c
-        core/board.h
-        core/fsm.c
-        core/fsm.h
-        core/game.c
-        core/game.h
-        core/piece.c
-        core/piece.h
-        core/score.c
-        core/score.h
         main.c
-        platform/display_port.h
+
+        # Core
+        core/bag.c
+        core/board.c
+        core/fsm.c
+        core/game.c
+        core/piece.c
+        core/score.c
+
+        # Host (terminal)
+        host/attract.c
         host/display_terminal.c
-        host/terminal_proxy.h
-        platform/input_port.h
-        host/display_terminal.h
         host/terminal_proxy.c
         host/input_keyboard.c
-        host/keyboard_proxy_terminal.h
         host/keyboard_proxy_terminal.c
-        host/input_keyboard.h
-        host/input_keyboard.h
-        host/keyboard_proxy_terminal.h
-        host/input_keyboard.c
-        host/input_keyboard.h
         host/main_host.c
-        host/main_host.h
-        host/main_host.h
 )
+
+target_compile_options(tetris PRIVATE -Wall -Wextra -Wpedantic)

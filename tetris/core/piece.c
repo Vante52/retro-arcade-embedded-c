@@ -1,12 +1,13 @@
-//implementación concreta de la plantilla de mis piezas
-#include "piece.h"
 #include <stdint.h>
+#include "piece.h"
 
-//Catálogo de piezas concreto con [tipos de pieza][rotación][filas][columnas]
+//piece Catalog indexed as [piece type][rotation][row]][columnas]
 static const uint8_t piece_shapes[7][4][4][4] = {
-    /* PIECE_I */
+    /* piece type [0] = PIECE_I */
     {
+        /*types of rotation [0,3]*/
         {
+            /* x,y occupations on the 4x4 matrix */
             {1, 1, 1, 1},
             {0, 0, 0, 0},
             {0, 0, 0, 0},
@@ -201,7 +202,7 @@ static const uint8_t piece_shapes[7][4][4][4] = {
     }
 };
 
-//Inicializa una pieza mandando el self pointer
+//initialize the piece 
 void piece_init(piece_t *self, piece_type_t type, int8_t x, int8_t y){
     self->type = type;
     self->rotation = 0;
@@ -210,16 +211,16 @@ void piece_init(piece_t *self, piece_type_t type, int8_t x, int8_t y){
 }
 //Rota una pieza
 void piece_rotate(piece_t *self) {
-    //4/4=1 y residuo 0, entonces vuelve al primer valor de la rotación
+    //4/4=1 and module = 0, so it wraps around after the fourth rotation state
     self->rotation = (self->rotation + 1) % 4;
 }
-//Mueve una pieza
+//Move the piede to the requested positions
 void piece_move(piece_t *self, int8_t dx, int8_t dy){
     self->x += dx;
     self->y += dy;
 }
 
-//getter
+
 uint8_t get_piece(const piece_t *self, int8_t row, int8_t col) {
     return piece_shapes[self->type][self->rotation][row][col];
 }

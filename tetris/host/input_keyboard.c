@@ -1,5 +1,4 @@
 #include "input_keyboard.h"
-
 #include <stddef.h>
 
 static void keyboard_port_init(void *ctx) {
@@ -15,21 +14,14 @@ static void keyboard_port_shutdown(void *ctx) {
 }
 
 void input_keyboard_init(keyboard_input_t *keyboard) {
-    if (keyboard == NULL) {
-        return;
-    }
-
+    if (keyboard == NULL) return;
     keyboard_proxy_terminal_init(&keyboard->proxy);
 }
 
 input_cmd_t input_keyboard_poll(keyboard_input_t *keyboard) {
-    keyboard_key_t key;
+    if (keyboard == NULL) return INPUT_CMD_NONE;
 
-    if (keyboard == NULL) {
-        return INPUT_CMD_NONE;
-    }
-
-    key = keyboard_proxy_terminal_read(&keyboard->proxy);
+    keyboard_key_t key = keyboard_proxy_terminal_read(&keyboard->proxy);
 
     switch (key) {
         case KEYBOARD_CMD_LEFT:
@@ -49,6 +41,9 @@ input_cmd_t input_keyboard_poll(keyboard_input_t *keyboard) {
         case KEYBOARD_KEY_S:
             return INPUT_CMD_DOWN;
 
+        case KEYBOARD_KEY_Q:        /* salir */
+            return INPUT_CMD_QUIT;
+
         case KEYBOARD_KEY_NONE:
         case KEYBOARD_KEY_UNKNOWN:
         default:
@@ -57,20 +52,15 @@ input_cmd_t input_keyboard_poll(keyboard_input_t *keyboard) {
 }
 
 void input_keyboard_shutdown(keyboard_input_t *keyboard) {
-    if (keyboard == NULL) {
-        return;
-    }
-
+    if (keyboard == NULL) return;
     keyboard_proxy_terminal_shutdown(&keyboard->proxy);
 }
 
 input_port_t input_keyboard_create(keyboard_input_t *keyboard) {
     input_port_t port;
-
-    port.init = keyboard_port_init;
-    port.poll = keyboard_port_poll;
+    port.init     = keyboard_port_init;
+    port.poll     = keyboard_port_poll;
     port.shutdown = keyboard_port_shutdown;
-    port.ctx = keyboard;
-
+    port.ctx      = keyboard;
     return port;
 }
