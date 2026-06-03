@@ -59,3 +59,70 @@ dkms.conf
 CMakeCache.txt
 /build
 /cmake_build_debug
+
+# =========================
+# VS Code
+# =========================
+
+# Configuración local/personal de VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Historial local de extensiones tipo Local History
+.history/
+
+# =========================
+# Antigravity
+# =========================
+
+# Archivos locales o temporales de agentes
+.antigravity/
+.antigravity-cache/
+.antigravity/logs/
+.antigravity/tmp/
+
+# Configuración sensible/local
+.env
+.env.*
+*.env
+
+# =========================
+# IDEs
+# =========================
+.idea/
+.vscode/
+.antigravity/
+.antigravity-cache/
+
+# =========================
+# CMake / builds
+# =========================
+build/
+**/build/
+cmake-build-*/
+cmake_build_*/
+CMakeFiles/
+**/CMakeFiles/
+CMakeCache.txt
+**/CMakeCache.txt
+cmake_install.cmake
+**/cmake_install.cmake
+compile_commands.json
+
+# =========================
+# Binarios / objetos
+# =========================
+*.o
+*.obj
+*.elf
+*.hex
+*.bin
+*.map
+*.out
+*.exe
+*.a
+*.so
+*.dll

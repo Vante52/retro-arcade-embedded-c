@@ -10,7 +10,7 @@ static uint8_t piece_row_has_block(const piece_t *piece, uint8_t row);
 void board_init(board_t *board){
     for(uint8_t i = 0; i < BOARD_HEIGHT; i++){
         for(uint8_t j = 0; j < BOARD_WIDTH; j++){
-            board->grid[i][j] = '.';
+            board->grid[i][j] = 0u;
         }
     }
 }
@@ -27,7 +27,7 @@ board_place_result_t board_check_placement(const board_t *board, const piece_t *
                     return BOARD_PLACE_OUT_OF_BOUNDS;
                 }
 
-                if (board->grid[y][x] == '#') {
+                if (board->grid[y][x] != 0u) {
                     return BOARD_PLACE_BLOCKED;
                 }
             }
@@ -40,11 +40,11 @@ uint8_t board_lock_piece(board_t *board, const piece_t *piece) {
     for (uint8_t i = 0; i < 4; i++) {
         for (uint8_t j = 0; j < 4; j++) {
             if (get_piece(piece, i, j)) {
-                int8_t x = piece->x + j;
-                int8_t y = piece->y + i;
+                int8_t x = piece->x + (int8_t)j;
+                int8_t y = piece->y + (int8_t)i;
 
                 if (x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT) {
-                    board->grid[y][x] = '#';
+                    board->grid[y][x] = (uint8_t)(piece->type + 1u);
                 }
             }
         }
@@ -54,54 +54,41 @@ uint8_t board_lock_piece(board_t *board, const piece_t *piece) {
 
 //clear a line if the row is filled
 static uint8_t board_clear_lines(board_t *board, const piece_t *piece) {
+    (void)piece;  // ya no hace falta usarla aquí
+
     uint8_t cleared = 0;
-    int8_t checked_rows[4];
-    uint8_t checked_count = 0;
 
-    for (uint8_t i = 0; i < 4; i++) {
-        if (piece_row_has_block(piece, i)) {
-            int8_t row = piece->y + i;
-
-            if (row >= 0 && row < BOARD_HEIGHT) {
-                uint8_t already_checked = 0;
-                for (uint8_t r = 0; r < checked_count; r++) {
-                    if (checked_rows[r] == row) {
-                        already_checked = 1;
-                        break;
-                    }
-                }
-
-                if (!already_checked) {
-                    checked_rows[checked_count++] = row;
-                }
-            }
-        }
-    }
-
-    for (int8_t idx = checked_count - 1; idx >= 0; idx--) {
-        int8_t row = checked_rows[idx];
+    for (int row = BOARD_HEIGHT - 1; row >= 0; row--) {
         uint8_t full = 1;
 
         for (uint8_t col = 0; col < BOARD_WIDTH; col++) {
-            if (board->grid[row][col] != '#') {
+            if (board->grid[row][col] == 0u) {
                 full = 0;
                 break;
             }
         }
 
         if (full) {
-            for (int8_t r = row; r > 0; r--) {
+            // bajar todo lo de arriba una fila
+            for (int r = row; r > 0; r--) {
                 for (uint8_t col = 0; col < BOARD_WIDTH; col++) {
                     board->grid[r][col] = board->grid[r - 1][col];
                 }
             }
 
+            // limpiar la fila superior
             for (uint8_t col = 0; col < BOARD_WIDTH; col++) {
-                board->grid[0][col] = '.';
+                board->grid[0][col] = 0u;
             }
+
             cleared++;
+
+            // volver a revisar esta misma fila,
+            // porque ahora cayó una nueva aquí
+            row++;
         }
     }
+
     return cleared;
 }
 

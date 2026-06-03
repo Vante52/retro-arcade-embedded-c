@@ -129,3 +129,7 @@ void game_enter_game_over(game_t *game) {
 uint8_t game_is_game_over(const game_t *game) {
     return game->game_over;
 }
+
+piece_type_t game_current_piece_type(const game_t *game) {
+     return game->current_piece.type;
+}

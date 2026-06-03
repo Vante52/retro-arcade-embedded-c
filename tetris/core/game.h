@@ -178,4 +178,11 @@ piece_type_t game_next_type(const game_t *game);
  */
 uint32_t game_score(const game_t *game);
 
+/**
+ * @brief returns the piece type of the active piece
+ * 
+ * @param[in] game current game state
+ * @return * piece_type_t type of the active piece
+ */
+piece_type_t game_current_piece_type(const game_t *game); 
 #endif

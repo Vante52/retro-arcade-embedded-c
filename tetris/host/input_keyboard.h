@@ -1,7 +1,7 @@
 #ifndef TETRIS_INPUT_KEYBOARD_H
 #define TETRIS_INPUT_KEYBOARD_H
 #include "../platform/input_port.h"
-#include "keyboard_proxy_terminal.h"
+#include "terminal/keyboard_proxy_terminal.h"
 
 typedef struct {
     keyboard_proxy_terminal_t proxy;

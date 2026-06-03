@@ -16,5 +16,8 @@ uint32_t score_get(const score_t *score){
 }
 
 void score_add_lines(score_t *score, uint8_t cleared_lines) {
-    score->score += cleared_lines*100;
+    if (cleared_lines>4){
+        score->score += cleared_lines*200;
+    }else
+        score->score += cleared_lines*100;
 }
