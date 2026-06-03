@@ -1,7 +1,0 @@
-/home/valkyrie/dotfiles/Documents/PUJ/sem7/dispro/retro-arcade-embedded-c/tetris/build/CMakeFiles/tetris_core.dir
-/home/valkyrie/dotfiles/Documents/PUJ/sem7/dispro/retro-arcade-embedded-c/tetris/build/CMakeFiles/tetris_terminal.dir
-/home/valkyrie/dotfiles/Documents/PUJ/sem7/dispro/retro-arcade-embedded-c/tetris/build/CMakeFiles/run_terminal.dir
-/home/valkyrie/dotfiles/Documents/PUJ/sem7/dispro/retro-arcade-embedded-c/tetris/build/CMakeFiles/tetris_sdl.dir
-/home/valkyrie/dotfiles/Documents/PUJ/sem7/dispro/retro-arcade-embedded-c/tetris/build/CMakeFiles/run_sdl.dir
-/home/valkyrie/dotfiles/Documents/PUJ/sem7/dispro/retro-arcade-embedded-c/tetris/build/CMakeFiles/edit_cache.dir
-/home/valkyrie/dotfiles/Documents/PUJ/sem7/dispro/retro-arcade-embedded-c/tetris/build/CMakeFiles/rebuild_cache.dir

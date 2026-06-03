@@ -1,2 +1,0 @@
-/usr/bin/ar qc libtetris_core.a CMakeFiles/tetris_core.dir/core/bag.c.o CMakeFiles/tetris_core.dir/core/board.c.o CMakeFiles/tetris_core.dir/core/fsm.c.o CMakeFiles/tetris_core.dir/core/game.c.o CMakeFiles/tetris_core.dir/core/piece.c.o CMakeFiles/tetris_core.dir/core/score.c.o
-/usr/bin/ranlib libtetris_core.a

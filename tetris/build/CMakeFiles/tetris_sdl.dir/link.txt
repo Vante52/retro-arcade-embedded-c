@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/tetris_sdl.dir/main_sdl.c.o CMakeFiles/tetris_sdl.dir/host/sdl/sdl_proxy.c.o CMakeFiles/tetris_sdl.dir/host/sdl/display_sdl.c.o CMakeFiles/tetris_sdl.dir/host/sdl/input_sdl.c.o CMakeFiles/tetris_sdl.dir/host/sdl/main_sdl.c.o -o tetris_sdl  libtetris_core.a /usr/lib/x86_64-linux-gnu/libSDL2.so 

@@ -1,3 +1,0 @@
-# Hashes of file build rules.
-22187e702063ded46e29d2a62fb5019d CMakeFiles/run_sdl
-f2996e133cf0b4b7aa3b499c56665ce3 CMakeFiles/run_terminal
