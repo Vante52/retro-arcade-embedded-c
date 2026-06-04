@@ -54,7 +54,7 @@ int main_host_init(void) {
     display_port_t      display;
     game_t             *game = game_get_instance();
     fsm_t               fsm;
-    keyboard_input_t    keyboard;
+    keyboard_input_t    keyboard = {0};
     input_port_t        input;
 
     app_state_t app_state    = APP_STATE_ATTRACT;
